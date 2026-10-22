@@ -1,0 +1,15 @@
+{
+  "first_name": "",
+  "last_name": "",
+  "email": "",
+  "phone": "",
+  "resume_path": "",
+  "city": "",
+  "country": "",
+  "canada_work_authorized": null,
+  "us_work_authorized": null,
+  "canada_requires_sponsorship": null,
+  "us_requires_sponsorship": null,
+  "available_from": null,
+  "available_until": null
+}

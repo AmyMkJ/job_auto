@@ -1,0 +1,5 @@
+[
+  {"provider": "greenhouse", "company": "stripe"},
+  {"provider": "greenhouse", "company": "databricks"},
+  {"provider": "lever", "company": "wealthsimple"}
+]
