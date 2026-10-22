@@ -3,7 +3,7 @@ import argparse
 import json
 from pathlib import Path
 from urllib.parse import urlsplit
-from .core import db, pay_check, country_for
+from .core import db, pay_check, country_for, is_high_school_role
 
 def main():
     parser = argparse.ArgumentParser()
@@ -15,6 +15,8 @@ def main():
         row = c.execute('SELECT * FROM jobs WHERE id=?', (args.job_id,)).fetchone()
     if row is None:
         raise SystemExit('Unknown job ID')
+    if is_high_school_role(row['title'], row['description']):
+        raise SystemExit('Blocked: this internship targets high-school students.')
     if row['term'] != 'confirmed' or not pay_check(row['description'], country_for(row['location']))['eligible']:
         raise SystemExit('Blocked: term, country or hourly pay is unconfirmed / below minimum.')
     url = urlsplit(row['url'])

@@ -17,7 +17,27 @@ def db():
     c.execute('''CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, title TEXT, company TEXT, location TEXT, url TEXT, description TEXT, published TEXT, first_seen TEXT, last_seen TEXT, score INTEGER, reasons TEXT, term TEXT, status TEXT DEFAULT 'new')''')
     return c
 
+def is_high_school_role(title, description):
+    def clean(value):
+        value = re.sub('<[^>]+>', ' ', html.unescape(value))
+        return re.sub(r'\s+', ' ', value).lower()
+    school = r'(?:high[\s-]*school|secondary[\s-]*school|高中)'
+    if re.search(school, clean(title)):
+        return True
+    # Match the intended applicants, not incidental references to a diploma
+    # or an employer's unrelated high-school outreach programmes.
+    text = clean(description)
+    patterns = [
+        rf'(?:intended|designed|specifically|reserved|exclusively)\s+(?:only\s+)?for\s+(?:(?:current|currently enrolled)\s+)?{school}',
+        rf'(?:must|should|required to)\s+be\s+(?:a\s+)?(?:current\s+)?{school}\s+(?:student|junior|senior)',
+        rf'(?:currently|must be)\s+enrolled\s+in\s+(?:a\s+)?{school}',
+        rf'(?:seeking|looking for|open to|eligible applicants are)\s+(?:current\s+)?{school}\s+students',
+    ]
+    return any(re.search(pattern, text) for pattern in patterns)
+
 def classify(title, description):
+    if is_high_school_role(title, description):
+        return None
     text = re.sub('<[^>]+>', ' ', html.unescape(title + ' ' + description)).lower()
     if not re.search(r'\b(intern(?:ship)?|co[ -]?op|cooperative)\b', title.lower()):
         return None
@@ -73,6 +93,7 @@ def refresh():
 def jobs():
     with db() as c:
         rows = [dict(r) for r in c.execute('SELECT * FROM jobs ORDER BY score DESC,first_seen DESC')]
+    rows = [r for r in rows if not is_high_school_role(r['title'], r['description'])]
     for r in rows:
         r['reasons'] = json.loads(r['reasons'])
         r['country'] = country_for(r['location'])
